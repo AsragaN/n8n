@@ -8,7 +8,8 @@ Workflow de n8n para un bot de voz que gestiona la cobranza telefónica de deuda
 .
 ├── README.md                       ← Este archivo
 ├── WORKFLOW.md                     ← Documentación detallada del workflow
-├── CAMPOS_ADICIONALES.md           ← Notas sobre campos extra de customerData
+├── VARIABLES_CRM.md                ← Guía completa de variables de customerData para el CRM
+├── CAMPOS_ADICIONALES.md           ← Notas misceláneas sobre customerData
 ├── workflow_consolidated.ts        ← Source del workflow (TypeScript con n8n SDK)
 ├── workflow_v2.ts                  ← Versión previa (archivada)
 └── tester/                         ← App web de testing local
@@ -65,8 +66,9 @@ Ver [tester/README.md](tester/README.md) para más detalles.
 ## Documentación
 
 - 📖 **[WORKFLOW.md](WORKFLOW.md)** — Funcionamiento detallado: arquitectura, state machine, todas las variables, prompts del LLM
+- 📋 **[VARIABLES_CRM.md](VARIABLES_CRM.md)** — Guía completa de todas las variables que el CRM debe enviar, con tipos, defaults, ejemplos y troubleshooting
 - 🧪 **[tester/README.md](tester/README.md)** — Cómo usar la app de testing local
-- 📋 **[CAMPOS_ADICIONALES.md](CAMPOS_ADICIONALES.md)** — Notas sobre campos de customerData
+- 📝 **[CAMPOS_ADICIONALES.md](CAMPOS_ADICIONALES.md)** — Notas misceláneas sobre customerData
 
 ## Dependencias del workflow
 

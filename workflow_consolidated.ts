@@ -279,18 +279,17 @@ const decideValidacion = node({
         'if(orig.rawTranscript)state.history.push({role:"user",content:orig.rawTranscript,ts:new Date().toISOString()});\n' +
         'let verbs,terminal,texto;\n' +
         'if(decision==="consulta"){\n' +
-        '  const _maxConsV=(state.config&&state.config.max_consultas)||3;\n' +
-        '  const _curConsV=state.intentos_consultas||0;\n' +
-        '  if(_curConsV>=_maxConsV){\n' +
-        '    state.machine_state="VALIDACION_IDENTIDAD";\n' +
-        '    texto=interp(cd.frase_limite_consultas)||("Disculpe, ya respondi varias consultas. Le pido que confirme si hablo con "+nombre+".");\n' +
-        '    terminal=false;\n' +
-        '    verbs=[{verb:"config",bargeIn:{enable:false}},{verb:"gather",input:["speech"],timeout:10,bargein:false,dtmfBargein:false,listenDuringPrompt:false,actionHook:actionHook,say:{text:texto}}];\n' +
+        '  state.intentos_id=(state.intentos_id||0)+1;\n' +
+        '  const maxIdC=(state.config&&state.config.max_intentos_id)||2;\n' +
+        '  if(state.intentos_id>=maxIdC){\n' +
+        '    state.machine_state="DESPEDIDA_RAPIDA";\n' +
+        '    state.resultado="no_identificado";\n' +
+        '    texto=interp(cd.frase_sin_respuesta)||"No pudimos completar la comunicacion. Que tenga buen dia.";\n' +
+        '    terminal=true;\n' +
+        '    verbs=[{verb:"say",text:texto},{verb:"hangup"}];\n' +
         '  }else{\n' +
-        '    state.intentos_consultas=_curConsV+1;\n' +
-        '    state.return_state="VALIDACION_IDENTIDAD";\n' +
-        '    state.machine_state="CONSULTAS_DUDA";\n' +
-        '    texto=interp(cd.frase_consulta_puente)||"Claro, con gusto le respondo. Cual es su consulta?";\n' +
+        '    state.machine_state="VALIDACION_IDENTIDAD";\n' +
+        '    texto=interp(cd.frase_consulta_puente)||("Primero debemos validar su identidad. Hablo con "+nombre+"?");\n' +
         '    terminal=false;\n' +
         '    verbs=[{verb:"config",bargeIn:{enable:false}},{verb:"gather",input:["speech"],timeout:10,bargein:false,dtmfBargein:false,listenDuringPrompt:false,actionHook:actionHook,say:{text:texto}}];\n' +
         '  }\n' +

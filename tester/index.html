@@ -255,8 +255,10 @@ const DEFAULT_CUSTOMER_DATA = {
   // Reintento cuando la respuesta fue ambigua en validación
   frase_reintento_ambiguo: "Disculpe, ¿podría confirmar si hablo con {nombre}?",
 
-  // Cuando el cliente hace una consulta antes de confirmar identidad (puente)
-  frase_consulta_puente: "Claro, con gusto le respondo. ¿Cuál es su consulta?",
+  // Cuando el cliente hace una pregunta ANTES de identificarse: el bot NO responde
+  // la pregunta. Exige identificación primero como filtro de seguridad.
+  // Cuenta como intento de identificación (después de N intentos cuelga).
+  frase_consulta_puente: "Primero debemos validar su identidad. ¿Hablo con {nombre}?",
 
   // === REINTENTOS DE NEG1 ===
   // Si intentos_acuerdo>=2, cuando el cliente se niega la 1ra vez el bot dice frase_neg1_intento_2.

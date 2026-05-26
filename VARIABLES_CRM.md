@@ -202,9 +202,11 @@ Todas opcionales. Si las dejás vacías o no las mandás, el bot usa un texto po
 - **Default**: `"Disculpe, podria confirmar si hablo con {nombre}?"`
 
 #### `frase_consulta_puente`
-- **Cuándo se usa**: Cliente hace una pregunta antes de identificarse ("¿de qué se trata?"). Bot invita a hacer la consulta.
-- **Default**: `"Claro, con gusto le respondo. Cual es su consulta?"`
-- **Ejemplo custom**: `"Por supuesto, dígame."`
+- **Cuándo se usa**: Cliente hace una pregunta **antes de identificarse** ("¿de qué se trata?", "¿cuánto debo?"). El bot **NO responde** la pregunta — actúa como filtro de seguridad y exige identificación primero.
+- **Importante**: Cada vez que el cliente pregunta sin identificarse, cuenta como un intento de identificación fallido (incrementa `intentos_id`). Después de `resiliencia` intentos, el bot cuelga con `frase_sin_respuesta`.
+- **Default**: `"Primero debemos validar su identidad. Hablo con {nombre}?"`
+- **Ejemplo custom**: `"Disculpe, antes de continuar necesito confirmar si hablo con {nombre}."`
+- **Nota**: una vez que el cliente se identifica, ya entra a NEG y ahí puede preguntar libremente — las consultas en NEG/NEG2 se responden inline.
 
 ### 5.3. Negociación 1 (monto total)
 

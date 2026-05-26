@@ -113,7 +113,7 @@ Todas opcionales. Si están vacías, el workflow usa un texto por defecto razona
 | `frase_sin_respuesta` | Después de N reintentos sin identificar → hangup |
 | `frase_reintento_silencio` | Hubo silencio, repreguntar identidad |
 | `frase_reintento_ambiguo` | Respuesta ambigua, repreguntar identidad |
-| `frase_consulta_puente` | Cliente pregunta antes de identificarse |
+| `frase_consulta_puente` | Cliente pregunta antes de identificarse — bot exige identificación primero (no responde la consulta) |
 
 #### NEGOCIACIÓN
 | Variable | Cuándo se usa |
@@ -209,7 +209,7 @@ LLM Validación clasifica entre 6 opciones:
 - **`titular`**: confirma identidad → bot dice `frase_cobro_titular` (o default) → estado NEG
 - **`tercero`**: es familiar/responsable → bot dice `frase_cobro_tercero` → estado NEG
 - **`desconocido`**: niega o número equivocado → bot dice `frase_no_titular` + hangup
-- **`consulta`**: pregunta antes de identificarse → bot dice `frase_consulta_puente` → estado CONSULTAS_DUDA
+- **`consulta`**: pregunta antes de identificarse → bot dice `frase_consulta_puente` ("Primero debemos validar su identidad") y se queda en VALIDACION. **Incrementa `intentos_id`** — si llega a `resiliencia`, cuelga.
 - **`silencio`**: transcript vacío → bot dice `frase_reintento_silencio` (re-pregunta)
 - **`ambiguo`**: no clasifica → bot dice `frase_reintento_ambiguo` (re-pregunta)
 

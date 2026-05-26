@@ -121,8 +121,16 @@ Desde el CRM tenés que armar el objeto `customerData` y pasárselo a Jambonz cu
 ### `tiempo_maximo`
 - **Tipo**: int (segundos)
 - **Default**: `200`
-- **Ejemplo**: `"200"`
-- **Uso**: **Por ahora no enforced en el workflow**. Se guarda en el state como configuración pero no corta la llamada automáticamente. Pensado para futuro.
+- **Ejemplo**: `"180"`
+- **Uso**: **Guardrail global de duración**. Al inicio de cada turno, el workflow calcula `elapsed = now − started_at`. Si `elapsed ≥ tiempo_maximo`, fuerza el estado a `TIMEOUT_FIN`, dice `frase_timeout` y cuelga, independientemente del estado en que se encuentre la conversación (excepto el primer SALUDO, donde `elapsed=0`).
+- En el record-update final llegan dos campos: `gestion.elapsed_seconds` (segundos reales) y `gestion.tiempo_maximo` (configurado), y `gestion.resultado = "timeout"`.
+
+### `frase_timeout`
+- **Tipo**: string
+- **Default**: `""` (usa fallback interno: *"Disculpe {nombre}, debemos finalizar la comunicacion. En breve nos contactaremos nuevamente. Que tenga buen dia."*)
+- **Ejemplo**: `"Disculpe {nombre}, debemos finalizar la comunicación por tiempo. Lo llamaremos nuevamente. Buen día."`
+- **Placeholders**: `{nombre}`, `{bot_name}`, `{entidad}`, `{deuda}`, `{vencimiento}`, `{cod_cliente}`.
+- **Uso**: Frase que dice el bot justo antes de colgar cuando se supera `tiempo_maximo`.
 
 ---
 

@@ -231,6 +231,12 @@ const DEFAULT_CUSTOMER_DATA = {
   frase_acuerdo_neg1: "Perfecto {nombre}, confirmo el acuerdo de pago por {deuda} con vencimiento el {vencimiento}. Su código de cliente es {cod_cliente}. Muchas gracias!",
   frase_acuerdo_neg2: "Perfecto {nombre}, confirmo el acuerdo de pago parcial por {monto_acuerdo_2} hasta el {fecha_acuerdo_2}. Su código de cliente es {cod_cliente}. Muchas gracias!",
 
+  // === FRASE DE CORTE POR TIEMPO MAXIMO ===
+  // Si elapsed (segundos desde el inicio) >= tiempo_maximo, el bot dice esta frase y cuelga.
+  // Independiente del estado: corta NEG, NEG2, VALIDACION, CONSULTAS, MOTIVO (todo menos el primer SALUDO).
+  // Si la dejás vacía, usa: "Disculpe {nombre}, debemos finalizar la comunicacion. En breve nos contactaremos nuevamente. Que tenga buen dia."
+  frase_timeout: "Disculpe {nombre}, debemos finalizar la comunicación por tiempo. Lo llamaremos nuevamente. Buen día.",
+
   // === FRASES PARAMETRIZABLES ===
   // Todas opcionales. Si las dejás vacías (""), el bot usa el texto por defecto.
   // Placeholders disponibles: {nombre} {bot_name} {entidad} {deuda} {vencimiento} {cod_cliente} {monto_acuerdo_2} {fecha_acuerdo_2}

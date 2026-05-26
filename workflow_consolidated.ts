@@ -84,6 +84,7 @@ const parseInput = node({
         '  frase_consulta_puente:cdRaw.frase_consulta_puente||"",\n' +
         '  frase_neg2_entrada:cdRaw.frase_neg2_entrada||"",\n' +
         '  frase_motivo_entrada:cdRaw.frase_motivo_entrada||"",\n' +
+        '  frase_timeout:cdRaw.frase_timeout||"",\n' +
         '  prompt_original:cdRaw.prompt||""\n' +
         '};\n' +
         'Object.keys(cdRaw).forEach(function(k){if(/^frase_(neg1|neg2)_intento_\\d+$/.test(k))cd[k]=cdRaw[k];});\n' +
@@ -119,10 +120,14 @@ const loadOrInitState = node({
         'if(inp.redisValue){try{state=JSON.parse(inp.redisValue);}catch(e){}}\n' +
         'if(!state){const cd=parsed.customerData||{};\n' +
         'state={machine_state:"SALUDO",customer:cd,\n' +
-        'config:{max_intentos_id:cd.resiliencia||2,max_intentos_neg1:cd.intentos_acuerdo||1,max_intentos_neg2:cd.intentos_acuerdo_2||1,max_consultas:cd.max_consultas||3,backend_url:cd.backend_url||"","backend_api_key":cd.backend_api_key||""},\n' +
+        'config:{max_intentos_id:cd.resiliencia||2,max_intentos_neg1:cd.intentos_acuerdo||1,max_intentos_neg2:cd.intentos_acuerdo_2||1,max_consultas:cd.max_consultas||3,tiempo_maximo:cd.tiempo_maximo||200,backend_url:cd.backend_url||"","backend_api_key":cd.backend_api_key||""},\n' +
         'intentos_id:0,intentos_neg1:0,intentos_neg2:0,intentos_consultas:0,identity_type:null,return_state:null,\n' +
         'motivo_no_pago:null,motivo_clasificado:null,resultado:null,history:[],\n' +
         'started_at:Math.floor(Date.now()/1000)};}\n' +
+        '// Guardrail global: cortar la llamada si supera tiempo_maximo (en segundos)\n' +
+        'const tiempoMax=parseInt(parsed.customerData.tiempo_maximo)||(state.config&&state.config.tiempo_maximo)||200;\n' +
+        'const elapsed=Math.floor(Date.now()/1000)-(state.started_at||Math.floor(Date.now()/1000));\n' +
+        'if(state.machine_state!=="SALUDO"&&elapsed>=tiempoMax){state.machine_state="TIMEOUT_FIN";state.resultado=state.resultado||"timeout";state.elapsed_seconds=elapsed;}\n' +
         'return[{json:{call_sid:parsed.call_sid,rawTranscript:parsed.rawTranscript,customerData:parsed.customerData,actionHook:parsed.actionHook,state:state,machine_state:state.machine_state}}];'
     },
     position: [720, 700]
@@ -142,7 +147,8 @@ const switchByState = switchCase({
           { outputKey: 'NEGOCIACION', renameOutput: true, conditions: { options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' }, conditions: [{ leftValue: expr('={{ $json.machine_state }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'NEGOCIACION' }], combinator: 'and' } },
           { outputKey: 'NEGOCIACION_2', renameOutput: true, conditions: { options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' }, conditions: [{ leftValue: expr('={{ $json.machine_state }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'NEGOCIACION_2' }], combinator: 'and' } },
           { outputKey: 'MOTIVO_NO_PAGO', renameOutput: true, conditions: { options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' }, conditions: [{ leftValue: expr('={{ $json.machine_state }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'MOTIVO_NO_PAGO' }], combinator: 'and' } },
-          { outputKey: 'CONSULTAS_DUDA', renameOutput: true, conditions: { options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' }, conditions: [{ leftValue: expr('={{ $json.machine_state }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'CONSULTAS_DUDA' }], combinator: 'and' } }
+          { outputKey: 'CONSULTAS_DUDA', renameOutput: true, conditions: { options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' }, conditions: [{ leftValue: expr('={{ $json.machine_state }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'CONSULTAS_DUDA' }], combinator: 'and' } },
+          { outputKey: 'TIMEOUT_FIN', renameOutput: true, conditions: { options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' }, conditions: [{ leftValue: expr('={{ $json.machine_state }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'TIMEOUT_FIN' }], combinator: 'and' } }
         ]
       },
       options: {}
@@ -908,6 +914,61 @@ const respondConsultas = node({
 });
 
 // ============================================================================
+// TIMEOUT_FIN: corte forzado por exceso de tiempo total de llamada
+// Se activa cuando elapsed >= customerData.tiempo_maximo (en segundos).
+// El check se hace en "Load or Init State" antes del switchByState.
+// ============================================================================
+
+const handlerTimeout = node({
+  type: 'n8n-nodes-base.code',
+  version: 2,
+  config: {
+    name: 'Handler Timeout',
+    parameters: {
+      jsCode:
+        'const orig=$input.first().json;\n' +
+        'const state=orig.state;\n' +
+        'const cd=state.customer||{};\n' +
+        'const nombre=(cd.Nombre||"usted").split(" ")[0];\n' +
+        'const botName=cd.bot_name||"Sofia";\n' +
+        'const entidad=cd.Entidad||"La Anonima";\n' +
+        'function interp(t){return(t||"").replace(/\\{(\\w+)\\}/g,function(_,k){const v={nombre:nombre,bot_name:botName,entidad:entidad,deuda:cd.Deuda_palabras||cd.Deuda||"",vencimiento:cd.Vencimiento_palabras||cd.Vencimiento||"",cod_cliente:cd.CodCliente||""};return v[k]!=null?v[k]:"";});}\n' +
+        'const texto=interp(cd.frase_timeout)||("Disculpe "+nombre+", debemos finalizar la comunicacion. En breve nos contactaremos nuevamente. Que tenga buen dia.");\n' +
+        'state.history=state.history||[];\n' +
+        'state.history.push({role:"assistant",content:texto,ts:new Date().toISOString(),from:"timeout"});\n' +
+        'state.resultado=state.resultado||"timeout";\n' +
+        'state.machine_state="DESPEDIDA_TIMEOUT";\n' +
+        'return[{json:{call_sid:orig.call_sid,state:state,verbs:[{verb:"say",text:texto},{verb:"hangup"}],terminal:true}}];'
+    },
+    position: [1200, 1800]
+  },
+  output: [{ call_sid: 'test123', state: {}, verbs: [], terminal: true, report: {} }]
+});
+
+const redisSetTimeout = node({
+  type: 'n8n-nodes-base.redis',
+  version: 1,
+  config: {
+    name: 'Redis Set State (Timeout)',
+    parameters: { operation: 'set', key: expr('={{ "call:" + $json.call_sid }}'), value: expr('={{ JSON.stringify($json.state) }}'), expire: true, ttl: 3600 },
+    credentials: { redis: newCredential('Redis account') },
+    position: [1440, 1800]
+  },
+  output: [{ verbs: [], report: {} }]
+});
+
+const respondTimeout = node({
+  type: 'n8n-nodes-base.respondToWebhook',
+  version: 1,
+  config: {
+    name: 'Respond Timeout',
+    parameters: { respondWith: 'json', responseBody: expr('={{ JSON.stringify($json.verbs) }}'), options: {} },
+    position: [1680, 1800]
+  },
+  output: [{ verbs: [], report: {} }]
+});
+
+// ============================================================================
 // TRIGGER 2: STATUS  (POST /la-anonima-status)
 // ============================================================================
 
@@ -1049,8 +1110,8 @@ const buildStatusReport = node({
         'const recordUrl="https://voice1.progeny.com.ar/webhooks/record-update";\n' +
         'const backendApiKey="vb_3W8DGWAJ3_uEX4NgWnIOCMOtzhp3ADDC0FH6iIaOWxI";\n' +
         'const rawBodyForStatus=parsed.rawBody||{};\n' +
-        'const RESULTADO_MAP={"acuerdo":"acuerdo","acuerdo_neg2":"acuerdo","sin_acuerdo":"fin","numero_equivocado":"no_responsable","sin_respuesta":"sin_respuesta","no_identificado":"identidad_no_confirmada"};\n' +
-        'const DESCRIPCIONES={"acuerdo":"El cliente confirmo que va a pagar la deuda","fin":"La conversacion termino sin acuerdo de pago","no_responsable":"La persona contactada no es el titular de la deuda","contestador":"Se detecto contestador automatico o buzon de voz","sin_respuesta":"El cliente no respondio tras varios intentos","identidad_no_confirmada":"No se pudo confirmar la identidad del cliente","desconocido":"Sin clasificacion"};\n' +
+        'const RESULTADO_MAP={"acuerdo":"acuerdo","acuerdo_neg2":"acuerdo","sin_acuerdo":"fin","numero_equivocado":"no_responsable","sin_respuesta":"sin_respuesta","no_identificado":"identidad_no_confirmada","timeout":"timeout"};\n' +
+        'const DESCRIPCIONES={"acuerdo":"El cliente confirmo que va a pagar la deuda","fin":"La conversacion termino sin acuerdo de pago","no_responsable":"La persona contactada no es el titular de la deuda","contestador":"Se detecto contestador automatico o buzon de voz","sin_respuesta":"El cliente no respondio tras varios intentos","identidad_no_confirmada":"No se pudo confirmar la identidad del cliente","timeout":"La llamada supero el tiempo maximo configurado y se corto","desconocido":"Sin clasificacion"};\n' +
         'const resultadoApp=resultado?(RESULTADO_MAP[resultado]||"desconocido"):"desconocido";\n' +
         'const descripcion=DESCRIPCIONES[resultadoApp]||DESCRIPCIONES["desconocido"];\n' +
         'let ultimoAssistant="";\n' +
@@ -1075,6 +1136,8 @@ const buildStatusReport = node({
         '    motivo_no_pago:motivoNoPago,\n' +
         '    motivo_clasificado:motivoClasificado,\n' +
         '    duration:parsed.duration||0,\n' +
+        '    elapsed_seconds:conversationState.elapsed_seconds||null,\n' +
+        '    tiempo_maximo:conversationState.config&&conversationState.config.tiempo_maximo||null,\n' +
         '    call_termination_by:parsed.call_termination_by||null,\n' +
         '    sip_status:parsed.sip_status||null,\n' +
         '    intentos_consumidos:intentosConsumidos\n' +
@@ -1419,6 +1482,7 @@ export default workflow('VdmF9mjoZFiUpH4j', 'La Anonima')
     ))
     .onCase(4, llmMotivo.to(decideMotivo).to(redisSetMotivo).to(respondMotivo))
     .onCase(5, llmConsultas.to(decideConsultas).to(redisSetConsultas).to(respondConsultas))
+    .onCase(6, handlerTimeout.to(redisSetTimeout).to(respondTimeout))
   )
   // Trigger 2: Status
   // Si NO es terminal y Build Status Report inicializo state desde rawBody -> lo persistimos

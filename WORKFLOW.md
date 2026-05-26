@@ -55,6 +55,24 @@ MOTIVO_NO_PAGO
 DESPEDIDA_SIN_ACUERDO + hangup
 ```
 
+### Crosscut: TIMEOUT_FIN (guardrail global de tiempo)
+
+En el nodo `Load or Init State`, antes del switch por estado, se calcula:
+```
+elapsed = now − state.started_at
+```
+
+Si `elapsed >= customerData.tiempo_maximo` (default 200 segundos) **y** el estado actual no es `SALUDO` (el primer turno tiene elapsed=0), se fuerza:
+```
+state.machine_state = "TIMEOUT_FIN"
+state.resultado     = "timeout"
+state.elapsed_seconds = elapsed
+```
+
+El switch deriva entonces al `Handler Timeout`, que dice `frase_timeout` (parametrizable, con placeholders) y devuelve `[say, hangup]`. Esto se aplica independientemente del estado en que estuviera la conversación (VALIDACION, NEG1, NEG2, MOTIVO, CONSULTAS), garantizando que ninguna llamada sobrepase el límite configurado.
+
+El `record-update` final reporta `gestion.resultado = "timeout"` + `gestion.elapsed_seconds` + `gestion.tiempo_maximo`.
+
 ### Crosscut: CONSULTAS_DUDA
 
 En cualquier momento (VALIDACION, NEG1, NEG2), si el LLM detecta que el cliente hizo una pregunta, salta a `CONSULTAS_DUDA`. El LLM Consultas responde con datos de `customerData` y vuelve al estado anterior (guardado en `state.return_state`).
@@ -85,7 +103,7 @@ En cualquier momento (VALIDACION, NEG1, NEG2), si el LLM detecta que el cliente 
 | `intentos_acuerdo` | int | `1` | Reintentos en NEG1 |
 | `intentos_acuerdo_2` | int | `1` | Reintentos en NEG2 |
 | `max_consultas` | int | `3` | Límite global de consultas |
-| `tiempo_maximo` | int | `200` | Tiempo máximo de llamada (no enforced) |
+| `tiempo_maximo` | int | `200` | Tiempo máximo de llamada en segundos. Si `elapsed ≥ tiempo_maximo`, el bot fuerza `TIMEOUT_FIN`, dice `frase_timeout` y cuelga. |
 
 ### Oferta alternativa de NEG2 (pago parcial)
 
@@ -129,6 +147,7 @@ Todas opcionales. Si están vacías, el workflow usa un texto por defecto razona
 | `frase_acuerdo_neg2` | Cliente acepta el monto parcial en NEG2 |
 | `frase_motivo_entrada` | Transición a MOTIVO_NO_PAGO (NEG → MOTIVO o NEG2 → MOTIVO) |
 | `frase_limite_consultas` | Cliente superó `max_consultas` |
+| `frase_timeout` | Llamada superó `tiempo_maximo` segundos — el bot dice esta frase y cuelga, sin importar el estado |
 
 ### Listas dinámicas
 

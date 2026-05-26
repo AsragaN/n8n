@@ -435,6 +435,8 @@ Al final de cada llamada (status terminal: completed, busy, no-answer, failed, c
   "gestion": {
     "resultado": "acuerdo",
     "acuerdo": true,
+    "tipo_acuerdo": "total",
+    "identity_type": "titular",
     "descripcion": "El cliente confirmo que va a pagar la deuda",
     "mensaje_asistente": "Perfecto Pedro, confirmo...",
     "mensaje_cliente": "si pago manana",
@@ -442,7 +444,13 @@ Al final de cada llamada (status terminal: completed, busy, no-answer, failed, c
     "motivo_clasificado": null,
     "duration": 45,
     "call_termination_by": "jambonz",
-    "sip_status": 200
+    "sip_status": 200,
+    "intentos_consumidos": {
+      "identidad": 0,
+      "negociacion_1": 0,
+      "negociacion_2": 0,
+      "consultas": 0
+    }
   },
   "transcripcion": [
     {"role": "assistant", "content": "Hola Pedro...", "timestamp": "..."},
@@ -451,6 +459,17 @@ Al final de cada llamada (status terminal: completed, busy, no-answer, failed, c
   ]
 }
 ```
+
+### Campos enriquecidos del payload
+
+| Campo | Tipo | Valores | Significado |
+|---|---|---|---|
+| `tipo_acuerdo` | string \| null | `"total"` / `"parcial"` / `null` | `total` si aceptó el monto completo (NEG1). `parcial` si aceptó la oferta de NEG2. `null` si no hubo acuerdo |
+| `identity_type` | string \| null | `"titular"` / `"tercero"` / `null` | `titular` si el cliente confirmó ser la persona. `tercero` si dijo ser familiar/responsable. `null` si no se identificó |
+| `intentos_consumidos.identidad` | int | 0+ | Cuántos reintentos de identificación se gastaron |
+| `intentos_consumidos.negociacion_1` | int | 0+ | Cuántos reintentos en NEG1 (monto total) |
+| `intentos_consumidos.negociacion_2` | int | 0+ | Cuántos reintentos en NEG2 (monto parcial) |
+| `intentos_consumidos.consultas` | int | 0+ | Cuántas consultas hizo el cliente |
 
 ### Valores posibles de `gestion.resultado`
 

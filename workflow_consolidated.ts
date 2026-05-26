@@ -1042,6 +1042,9 @@ const buildStatusReport = node({
         'const resultado=conversationState.resultado||null;\n' +
         'const motivoNoPago=conversationState.motivo_no_pago||null;\n' +
         'const motivoClasificado=conversationState.motivo_clasificado||null;\n' +
+        'const identityType=conversationState.identity_type||null;\n' +
+        'const tipoAcuerdo=(resultado==="acuerdo")?"total":((resultado==="acuerdo_neg2")?"parcial":null);\n' +
+        'const intentosConsumidos={identidad:conversationState.intentos_id||0,negociacion_1:conversationState.intentos_neg1||0,negociacion_2:conversationState.intentos_neg2||0,consultas:conversationState.intentos_consultas||0};\n' +
         'const statusUrl="https://voice1.progeny.com.ar/webhooks/call-status";\n' +
         'const recordUrl="https://voice1.progeny.com.ar/webhooks/record-update";\n' +
         'const backendApiKey="vb_3W8DGWAJ3_uEX4NgWnIOCMOtzhp3ADDC0FH6iIaOWxI";\n' +
@@ -1064,6 +1067,8 @@ const buildStatusReport = node({
         '  gestion:{\n' +
         '    resultado:resultadoApp,\n' +
         '    acuerdo:resultadoApp==="acuerdo",\n' +
+        '    tipo_acuerdo:tipoAcuerdo,\n' +
+        '    identity_type:identityType,\n' +
         '    descripcion:descripcion,\n' +
         '    mensaje_asistente:ultimoAssistant,\n' +
         '    mensaje_cliente:ultimoUser,\n' +
@@ -1071,7 +1076,8 @@ const buildStatusReport = node({
         '    motivo_clasificado:motivoClasificado,\n' +
         '    duration:parsed.duration||0,\n' +
         '    call_termination_by:parsed.call_termination_by||null,\n' +
-        '    sip_status:parsed.sip_status||null\n' +
+        '    sip_status:parsed.sip_status||null,\n' +
+        '    intentos_consumidos:intentosConsumidos\n' +
         '  },\n' +
         '  transcripcion:transcripcion\n' +
         '};\n' +

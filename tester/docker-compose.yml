@@ -1,0 +1,16 @@
+services:
+  tester:
+    build: .
+    container_name: la-anonima-tester
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      # Apuntá a tu n8n. Por defecto usa el público de geellow.
+      N8N_BASE: ${N8N_BASE:-https://n8n.geellow.com/webhook}
+      PORT: 8080
+    # Hot-reload de los assets sin rebuild: bind-mounteamos el código.
+    # Si querés "imagen pura" sin reflejar cambios locales, comentá estos volumes.
+    volumes:
+      - ./server.js:/app/server.js:ro
+      - ./index.html:/app/index.html:ro

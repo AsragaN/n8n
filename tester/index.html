@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>La Anonima — Jambonz Tester</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; background: #0f172a; color: #e2e8f0; font-size: 14px; }
+  header { background: #1e293b; padding: 12px 20px; border-bottom: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; }
+  h1 { margin: 0; font-size: 18px; font-weight: 600; color: #fafafa; }
+  .subtitle { color: #94a3b8; font-size: 12px; margin-top: 2px; }
+  .call-sid { font-family: 'SF Mono', Consolas, monospace; font-size: 12px; color: #38bdf8; background: #0c4a6e; padding: 6px 10px; border-radius: 4px; }
+  main { display: grid; grid-template-columns: 380px 1fr 420px; gap: 12px; padding: 12px; height: calc(100vh - 60px); }
+  section { background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 12px; overflow: auto; display: flex; flex-direction: column; gap: 10px; }
+  h2 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; border-bottom: 1px solid #334155; padding-bottom: 6px; }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; }
+  button { background: #334155; color: #e2e8f0; border: 1px solid #475569; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: all 0.1s; }
+  button:hover { background: #475569; }
+  button:active { transform: translateY(1px); }
+  button.primary { background: #0284c7; border-color: #0369a1; }
+  button.primary:hover { background: #0369a1; }
+  button.danger { background: #b91c1c; border-color: #991b1b; }
+  button.danger:hover { background: #991b1b; }
+  button.warn { background: #b45309; border-color: #92400e; }
+  button.warn:hover { background: #92400e; }
+  button.success { background: #15803d; border-color: #166534; }
+  button.success:hover { background: #166534; }
+  button.full { width: 100%; }
+  input[type=text], textarea { background: #0f172a; color: #e2e8f0; border: 1px solid #334155; border-radius: 4px; padding: 6px 8px; font-family: inherit; font-size: 13px; width: 100%; }
+  textarea { font-family: 'SF Mono', Consolas, monospace; font-size: 12px; resize: vertical; min-height: 200px; }
+  .group { background: #0f172a; border: 1px solid #334155; border-radius: 4px; padding: 10px; }
+  .group-title { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+  .log-entry { background: #0f172a; border: 1px solid #334155; border-left: 3px solid #64748b; border-radius: 4px; padding: 8px 10px; font-size: 12px; font-family: 'SF Mono', Consolas, monospace; }
+  .log-entry.app { border-left-color: #38bdf8; }
+  .log-entry.status { border-left-color: #a78bfa; }
+  .log-entry.amd { border-left-color: #fb923c; }
+  .log-entry.error { border-left-color: #f43f5e; }
+  .log-entry .meta { color: #64748b; margin-bottom: 4px; display: flex; justify-content: space-between; gap: 8px; }
+  .log-entry .meta .tag { background: #334155; padding: 2px 6px; border-radius: 3px; color: #e2e8f0; font-size: 11px; }
+  .log-entry pre { margin: 4px 0 0; white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow: auto; color: #cbd5e1; }
+  .chat { display: flex; flex-direction: column; gap: 6px; }
+  .chat-msg { padding: 8px 10px; border-radius: 6px; max-width: 85%; font-size: 13px; line-height: 1.4; word-wrap: break-word; }
+  .chat-msg.user { background: #0c4a6e; color: #e0f2fe; align-self: flex-end; border-bottom-right-radius: 2px; }
+  .chat-msg.assistant { background: #334155; color: #e2e8f0; align-self: flex-start; border-bottom-left-radius: 2px; }
+  .chat-msg .role { font-size: 10px; color: #94a3b8; margin-bottom: 2px; text-transform: uppercase; }
+  .status-pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+  .status-pill.idle { background: #334155; color: #94a3b8; }
+  .status-pill.active { background: #15803d; color: #d1fae5; }
+  .status-pill.ended { background: #991b1b; color: #fee2e2; }
+  .small { font-size: 11px; color: #64748b; }
+  .url-display { font-family: 'SF Mono', Consolas, monospace; font-size: 11px; color: #38bdf8; word-break: break-all; }
+  .switcher { display: flex; gap: 4px; margin-bottom: 8px; }
+  .switcher button { flex: 1; font-size: 12px; }
+  .switcher button.active { background: #0284c7; border-color: #0369a1; }
+  .clear-btn { font-size: 11px; padding: 3px 8px; }
+  .field { margin-bottom: 8px; }
+  details { background: #0f172a; border: 1px solid #334155; border-radius: 4px; padding: 8px; }
+  details summary { cursor: pointer; font-size: 12px; color: #94a3b8; }
+  details summary:hover { color: #e2e8f0; }
+  .row-inline { display: flex; gap: 6px; align-items: center; }
+  .row-inline input { flex: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🎙️ La Anonima — Jambonz Tester</h1>
+    <div class="subtitle">Simula los 3 webhooks (App / Status / AMD) como si fuera Jambonz real</div>
+  </div>
+  <div>
+    <span class="small">call_sid:</span>
+    <span class="call-sid" id="call-sid">—</span>
+    <span class="status-pill idle" id="call-state" style="margin-left:8px;">no iniciada</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- ====================== COLUMNA IZQUIERDA: CONFIG ====================== -->
+  <section>
+    <h2>1. CustomerData</h2>
+    <div class="small">JSON que viajará dentro de <code>body.customerData</code> en cada webhook. Se persiste en localStorage. Editá libremente para probar nuevas variables.</div>
+    <textarea id="customer-data" style="min-height: 380px;"></textarea>
+    <div class="row">
+      <button class="primary" onclick="saveCustomerData()">💾 Guardar</button>
+      <button onclick="loadDefaultCustomerData()">📋 Cargar default</button>
+      <button onclick="formatCustomerData()">✨ Formatear JSON</button>
+    </div>
+
+    <h2 style="margin-top:16px;">2. Llamada</h2>
+    <div class="field">
+      <label>Call SID (auto-generado)</label>
+      <div class="row-inline">
+        <input type="text" id="call-sid-input" />
+        <button onclick="newCallSid()">🆕</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Teléfono destino</label>
+      <input type="text" id="to-phone" value="095491170644828" />
+    </div>
+    <div class="field">
+      <label>Teléfono origen</label>
+      <input type="text" id="from-phone" value="541151739216" />
+    </div>
+
+    <details>
+      <summary>URLs configuradas</summary>
+      <div class="small" id="urls-info" style="margin-top:8px;"></div>
+    </details>
+  </section>
+
+  <!-- ====================== COLUMNA CENTRO: CHAT + CONVERSACIÓN ====================== -->
+  <section>
+    <h2>3. Conversación</h2>
+    <div class="row">
+      <button class="success" onclick="sendInitialCall()">📞 1. Iniciar llamada (saludo)</button>
+      <button class="clear-btn" onclick="clearChat()">🗑 Limpiar chat</button>
+    </div>
+    <div class="small">Esto envía un POST al webhook App sin transcript, simula el momento en que Jambonz contacta tu workflow después del answered.</div>
+
+    <div id="chat" class="chat" style="flex: 1; min-height: 200px; overflow: auto;"></div>
+
+    <div class="group">
+      <div class="group-title">Enviar turno del cliente</div>
+      <div class="field">
+        <input type="text" id="user-input" placeholder="Ej: sí soy yo · cuánto debo · no puedo pagar · soy indigente"
+               onkeydown="if(event.key==='Enter')sendTurn()" />
+      </div>
+      <div class="row">
+        <button class="primary" onclick="sendTurn()">💬 Enviar turno</button>
+        <button onclick="sendSilence()">🔇 Simular silencio</button>
+      </div>
+      <div class="small" style="margin-top:6px;">Atajo: Enter envía. "Silencio" manda transcript vacío con reason:timeout.</div>
+    </div>
+
+    <div class="group">
+      <div class="group-title">Atajos comunes de cliente</div>
+      <div class="row">
+        <button onclick="quickTurn('sí soy yo')">sí soy yo</button>
+        <button onclick="quickTurn('no, número equivocado')">numero equivocado</button>
+        <button onclick="quickTurn('soy la esposa')">soy la esposa</button>
+        <button onclick="quickTurn('cuánto debo')">cuánto debo?</button>
+        <button onclick="quickTurn('sí voy a pagar mañana')">acepta pago</button>
+        <button onclick="quickTurn('no puedo pagar')">no puedo</button>
+        <button onclick="quickTurn('no me parece')">no me parece</button>
+        <button onclick="quickTurn('perdí el trabajo')">sin empleo</button>
+        <button onclick="quickTurn('estoy de viaje')">viaje</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== COLUMNA DERECHA: STATUS / AMD / LOG ====================== -->
+  <section>
+    <h2>4. Status events</h2>
+    <div class="small">POST al webhook /la-anonima-status simulando el ciclo de vida que manda Jambonz.</div>
+    <div class="row">
+      <button onclick="sendStatus('trying', 100, 'Trying')">trying</button>
+      <button onclick="sendStatus('ringing', 180, 'Ringing')">ringing</button>
+      <button onclick="sendStatus('early-media', 183, 'Session Progress')">early-media</button>
+      <button class="success" onclick="sendStatus('in-progress', 200, 'OK')">in-progress (answered)</button>
+    </div>
+    <div class="row">
+      <button class="danger" onclick="sendStatus('completed', 200, 'OK', true)">✓ completed</button>
+      <button class="warn" onclick="sendStatus('no-answer', 487, 'Request Terminated', true)">no-answer</button>
+      <button class="warn" onclick="sendStatus('busy', 486, 'Busy Here', true)">busy</button>
+      <button class="danger" onclick="sendStatus('failed', 503, 'Service Unavailable', true)">failed</button>
+      <button class="warn" onclick="sendStatus('canceled', 487, 'Request Terminated', true)">canceled</button>
+    </div>
+
+    <h2 style="margin-top:12px;">5. AMD events</h2>
+    <div class="small">POST al webhook /la-anonima-amd. Humano → no interrumpe; máquina → cuelga y registra contestador.</div>
+    <div class="row">
+      <button class="success" onclick="sendAmd('amd_human_detected', 'short greeting')">👤 Humano</button>
+      <button class="warn" onclick="sendAmd('amd_machine_detected', 'long greeting')">🤖 Máquina</button>
+      <button onclick="sendAmd('amd_fax_detected', 'fax tones')">📠 Fax</button>
+    </div>
+
+    <h2 style="margin-top:12px;">📜 Log de requests</h2>
+    <div class="row">
+      <button class="clear-btn" onclick="clearLog()">🗑 Limpiar log</button>
+    </div>
+    <div id="log" style="flex: 1; min-height: 200px; overflow: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+  </section>
+
+</main>
+
+<script>
+// ============================================================================
+// STATE
+// ============================================================================
+let currentCallSid = '';
+let n8nBase = '';
+
+const DEFAULT_CUSTOMER_DATA = {
+  Entidad: "La Anónima",
+  Documento: "31968694",
+  Telefono: "1170644828",
+  Deuda: "150000",
+  Nombre: "Emmanuel Tartallini",
+  CodCliente: "123456",
+  Vencimiento: "25/05/2026",
+  campaign_id: "test-campaign-001",
+  record_index: "0",
+  prompt: "(ignorado por el bot)",
+  telefono_norm: "095491170644828",
+  webhook_contestador: "https://n8n.geellow.com/webhook/la-anonima-amd",
+  resiliencia: "2",
+  tiempo_maximo: "200",
+  intentos_acuerdo: "1",      // reintentos en NEG1 (monto total)
+  intentos_acuerdo_2: "1",    // reintentos en NEG2 (monto parcial)
+  bot_name: "Sofia",
+
+  // === NEG2: oferta alternativa ===
+  // Si están definidos, el LLM de NEG2 los usa para ofrecer un pago parcial con nueva fecha.
+  // Si quedan vacíos, NEG2 funciona como antes (último intento sin alternativa).
+  monto_acuerdo_2: "75000",        // monto parcial aceptable en NEG2 (la mitad de la deuda en este ejemplo)
+  fecha_acuerdo_2: "10/06/2026",   // nueva fecha límite para el pago parcial
+
+  // === LIMITE DE CONSULTAS ===
+  // Cuántas consultas máximas puede hacer el cliente en TODA la llamada (contador global).
+  // Cuando supera el límite, el bot corta diciendo frase_limite_consultas y vuelve a la fase anterior.
+  max_consultas: "3",
+  frase_limite_consultas: "Disculpe {nombre}, ya respondí varias consultas. Necesito que avancemos con el tema del pago. ¿Podemos continuar?",
+
+  // === FRASES DE CONFIRMACIÓN DE ACUERDO ===
+  // Cuando el cliente acepta pagar, el bot dice estas frases fijas (más confiables que el LLM).
+  // Si las dejás vacías, el LLM genera la confirmación (pero a veces omite datos importantes).
+  frase_acuerdo_neg1: "Perfecto {nombre}, confirmo el acuerdo de pago por {deuda} con vencimiento el {vencimiento}. Su código de cliente es {cod_cliente}. Muchas gracias!",
+  frase_acuerdo_neg2: "Perfecto {nombre}, confirmo el acuerdo de pago parcial por {monto_acuerdo_2} hasta el {fecha_acuerdo_2}. Su código de cliente es {cod_cliente}. Muchas gracias!",
+
+  // === FRASES PARAMETRIZABLES ===
+  // Todas opcionales. Si las dejás vacías (""), el bot usa el texto por defecto.
+  // Placeholders disponibles: {nombre} {bot_name} {entidad} {deuda} {vencimiento} {cod_cliente} {monto_acuerdo_2} {fecha_acuerdo_2}
+  saludo_inicial: "Hola, muy buenas tardes! Soy {bot_name}, un asistente virtual. ¿Me comunico con {nombre}?",
+  saludo_despedida: "Muchas gracias!",
+
+  // Cuando el LLM detecta que el cliente confirmó identidad como TITULAR (entrada a negociación)
+  frase_cobro_titular: "{nombre}, le contacto por una deuda pendiente con {entidad} por {deuda} con vencimiento el {vencimiento}. ¿Podrá regularizarla dentro del plazo?",
+
+  // Cuando el LLM detecta que es un TERCERO responsable (familiar, etc.)
+  frase_cobro_tercero: "Perfecto. Le informo que el titular tiene una deuda con {entidad} por {deuda}. ¿Podrá gestionar el pago?",
+
+  // Cuando el cliente dice que no es la persona / número equivocado
+  frase_no_titular: "Disculpe la molestia, que tenga buen día.",
+
+  // Después de N reintentos sin lograr identificar al cliente
+  frase_sin_respuesta: "No pudimos completar la comunicación. Que tenga buen día.",
+
+  // Reintento cuando hubo silencio en validación
+  frase_reintento_silencio: "Hola, ¿hablo con {nombre}?",
+
+  // Reintento cuando la respuesta fue ambigua en validación
+  frase_reintento_ambiguo: "Disculpe, ¿podría confirmar si hablo con {nombre}?",
+
+  // Cuando el cliente hace una consulta antes de confirmar identidad (puente)
+  frase_consulta_puente: "Claro, con gusto le respondo. ¿Cuál es su consulta?",
+
+  // === REINTENTOS DE NEG1 ===
+  // Si intentos_acuerdo>=2, cuando el cliente se niega la 1ra vez el bot dice frase_neg1_intento_2.
+  // Si intentos_acuerdo>=3, en la 2da negativa dice frase_neg1_intento_3. Etc.
+  // Si la frase del intento no está definida, el LLM genera la respuesta.
+  frase_neg1_intento_2: "Entiendo {nombre}, pero realmente necesitamos que regularice. ¿Hay alguna forma en que pueda afrontar el pago de {deuda}?",
+  frase_neg1_intento_3: "{nombre}, es importante para evitar mayores inconvenientes. ¿Podemos cerrar el pago hoy?",
+
+  // Cuando se agotan los intentos de NEG1 y se pasa a NEG2 (segunda oportunidad con monto parcial)
+  frase_neg2_entrada: "Entiendo {nombre}. Como alternativa podemos cerrar el caso con un pago parcial de {monto_acuerdo_2} hasta el {fecha_acuerdo_2}. ¿Le interesa esta opción?",
+
+  // === REINTENTOS DE NEG2 ===
+  // Si intentos_acuerdo_2>=2, en la 1ra negativa dentro de NEG2 el bot dice frase_neg2_intento_2. Etc.
+  frase_neg2_intento_2: "Es realmente la última oportunidad. {nombre}, ¿puede aceptar el pago parcial de {monto_acuerdo_2} antes del {fecha_acuerdo_2}?",
+  frase_neg2_intento_3: "{nombre}, le pido por favor que considere los {monto_acuerdo_2}, es el monto mínimo posible. ¿Lo confirma?",
+
+  // Cuando se cierra NEG2 sin acuerdo y se pasa a relevar motivo
+  frase_motivo_entrada: "Entiendo. Para registrarlo en el sistema, ¿podría decirme cuál es el motivo principal por el que no puede afrontar el pago?",
+
+  limite_acuerdo: "25/05/2026",
+  formas_de_pago: '[{"metodo":"Caja de supermercado","descripcion":"En efectivo en linea de cajas con acreditacion en 24 horas.","sms":false},{"metodo":"Pago Mis Cuentas o Banelco o Link","descripcion":"De forma digital","sms":false},{"metodo":"Home Banking","descripcion":"De forma digital","sms":false},{"metodo":"Mercado Pago","descripcion":"Buscando la anonima e indicando el numero de cliente","sms":false}]',
+  motivos_no_acuerdo: '[{"motivo":"desconoce_deuda"},{"motivo":"pago_automatico"},{"motivo":"sin_empleo"},{"motivo":"enfermedad"},{"motivo":"viaje"},{"motivo":"niega"}]',
+  sms_config: '{"url":"https://desarrollo.ttsa.ar/api/v1/envios/masivo/json","descripcion":"VOICE TLA SMS","mensaje":"Hola Emmanuel Tartallini, El compromiso ha sido aceptado, podés pagar por MercadoPago con tu número de cliente 123456 o tu DNI.","mensaje_contestador":"Hola Emmanuel Tartallini, regulariza tu deuda con La Anónima","api_key":"pk_live_xxx"}'
+};
+
+// ============================================================================
+// INIT
+// ============================================================================
+async function init() {
+  // Cargar config del server
+  try {
+    const cfg = await fetch('/config').then(r => r.json());
+    n8nBase = cfg.n8nBase;
+    document.getElementById('urls-info').innerHTML =
+      Object.entries(cfg.routes).map(([k, v]) =>
+        `<div><strong>${k}</strong>: <span class="url-display">${v}</span></div>`
+      ).join('');
+  } catch (e) {
+    document.getElementById('urls-info').textContent = 'No pude leer /config: ' + e.message;
+  }
+
+  // Cargar customerData de localStorage o usar default
+  const stored = localStorage.getItem('jambonz-tester-customer-data');
+  if (stored) {
+    document.getElementById('customer-data').value = stored;
+  } else {
+    loadDefaultCustomerData();
+  }
+
+  newCallSid();
+}
+
+// ============================================================================
+// CUSTOMER DATA
+// ============================================================================
+function loadDefaultCustomerData() {
+  document.getElementById('customer-data').value = JSON.stringify(DEFAULT_CUSTOMER_DATA, null, 2);
+}
+function saveCustomerData() {
+  try {
+    const parsed = JSON.parse(document.getElementById('customer-data').value);
+    localStorage.setItem('jambonz-tester-customer-data', JSON.stringify(parsed, null, 2));
+    document.getElementById('customer-data').value = JSON.stringify(parsed, null, 2);
+    flash('💾 customerData guardado en localStorage', 'success');
+  } catch (e) {
+    flash('❌ JSON inválido: ' + e.message, 'error');
+  }
+}
+function formatCustomerData() {
+  try {
+    const parsed = JSON.parse(document.getElementById('customer-data').value);
+    document.getElementById('customer-data').value = JSON.stringify(parsed, null, 2);
+  } catch (e) {
+    flash('❌ JSON inválido: ' + e.message, 'error');
+  }
+}
+function getCustomerData() {
+  try {
+    return JSON.parse(document.getElementById('customer-data').value);
+  } catch (e) {
+    flash('❌ customerData es JSON inválido: ' + e.message, 'error');
+    throw e;
+  }
+}
+
+// ============================================================================
+// CALL SID
+// ============================================================================
+function newCallSid() {
+  // UUID v4 simple
+  const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+  currentCallSid = uuid;
+  document.getElementById('call-sid').textContent = uuid;
+  document.getElementById('call-sid-input').value = uuid;
+  setCallState('idle', 'no iniciada');
+  clearChat();
+}
+function getCallSid() {
+  const input = document.getElementById('call-sid-input').value.trim();
+  if (input && input !== currentCallSid) currentCallSid = input;
+  document.getElementById('call-sid').textContent = currentCallSid;
+  return currentCallSid;
+}
+function setCallState(cls, label) {
+  const el = document.getElementById('call-state');
+  el.className = 'status-pill ' + cls;
+  el.textContent = label;
+}
+
+// ============================================================================
+// CHAT
+// ============================================================================
+function clearChat() {
+  document.getElementById('chat').innerHTML = '';
+}
+function addChatMessage(role, text) {
+  const el = document.createElement('div');
+  el.className = 'chat-msg ' + role;
+  el.innerHTML = `<div class="role">${role}</div>${escapeHtml(text)}`;
+  document.getElementById('chat').appendChild(el);
+  el.scrollIntoView({ behavior: 'smooth' });
+}
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+// ============================================================================
+// LOG
+// ============================================================================
+function clearLog() {
+  document.getElementById('log').innerHTML = '';
+}
+function logRequest(kind, label, request, response, elapsedMs) {
+  const el = document.createElement('div');
+  el.className = 'log-entry ' + kind;
+  const reqStr = JSON.stringify(request, null, 2);
+  const respStr = typeof response === 'string' ? response : JSON.stringify(response, null, 2);
+  el.innerHTML = `
+    <div class="meta">
+      <span><span class="tag">${kind}</span> ${escapeHtml(label)}</span>
+      <span>${new Date().toLocaleTimeString()} · ${elapsedMs}ms</span>
+    </div>
+    <details>
+      <summary>request body (${reqStr.length} chars)</summary>
+      <pre>${escapeHtml(reqStr)}</pre>
+    </details>
+    <details open>
+      <summary>response (${respStr.length} chars)</summary>
+      <pre>${escapeHtml(respStr)}</pre>
+    </details>
+  `;
+  document.getElementById('log').prepend(el);
+}
+function flash(msg, kind) {
+  const el = document.createElement('div');
+  el.className = 'log-entry ' + (kind || '');
+  el.innerHTML = `<div class="meta"><span>${escapeHtml(msg)}</span><span>${new Date().toLocaleTimeString()}</span></div>`;
+  document.getElementById('log').prepend(el);
+}
+
+// ============================================================================
+// REQUEST HELPERS
+// ============================================================================
+async function postProxy(route, body) {
+  const t0 = Date.now();
+  const res = await fetch('/proxy/' + route, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const elapsed = Date.now() - t0;
+  const data = await res.json();
+  return { ...data, elapsed };
+}
+
+// ============================================================================
+// WEBHOOK APP (conversación)
+// ============================================================================
+async function sendInitialCall() {
+  try {
+    const cd = getCustomerData();
+    const sid = getCallSid();
+    const body = {
+      call_sid: sid,
+      direction: 'outbound',
+      from: document.getElementById('from-phone').value,
+      to: document.getElementById('to-phone').value,
+      sip_status: 200,
+      sip_reason: 'OK',
+      call_status: 'in-progress',
+      account_sid: 'tester-account',
+      application_sid: 'tester-app',
+      trace_id: 'tester-trace',
+      customerData: cd,
+      defaults: {
+        synthesizer: { vendor: 'deepgram', language: 'en-US', voice: 'aura-2-agustina-es', label: 'funciona' },
+        recognizer: { vendor: 'deepgram', language: 'es-AR', label: 'funciona' }
+      },
+    };
+    const r = await postProxy('app', body);
+    handleAppResponse('▶ saludo inicial', body, r);
+    setCallState('active', 'en curso');
+  } catch (e) { flash('❌ ' + e.message, 'error'); }
+}
+
+async function sendTurn() {
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  await sendTurnWithText(text);
+}
+
+async function quickTurn(text) {
+  document.getElementById('user-input').value = text;
+  await sendTurnWithText(text);
+  document.getElementById('user-input').value = '';
+}
+
+async function sendTurnWithText(text) {
+  try {
+    const cd = getCustomerData();
+    const sid = getCallSid();
+    addChatMessage('user', text);
+    const body = {
+      call_sid: sid,
+      direction: 'outbound',
+      from: document.getElementById('from-phone').value,
+      to: document.getElementById('to-phone').value,
+      sip_status: 200,
+      sip_reason: 'OK',
+      call_status: 'in-progress',
+      account_sid: 'tester-account',
+      application_sid: 'tester-app',
+      trace_id: 'tester-trace',
+      customerData: cd,
+      speech: {
+        language_code: 'es-AR',
+        is_final: true,
+        alternatives: [{ confidence: 0.95, transcript: text }],
+        vendor: { name: 'deepgram' },
+      },
+      reason: 'speechDetected',
+    };
+    const r = await postProxy('app', body);
+    handleAppResponse('💬 turno: ' + text.slice(0, 30), body, r);
+  } catch (e) { flash('❌ ' + e.message, 'error'); }
+}
+
+async function sendSilence() {
+  try {
+    const cd = getCustomerData();
+    const sid = getCallSid();
+    addChatMessage('user', '[silencio - timeout]');
+    const body = {
+      call_sid: sid,
+      direction: 'outbound',
+      from: document.getElementById('from-phone').value,
+      to: document.getElementById('to-phone').value,
+      sip_status: 200,
+      sip_reason: 'OK',
+      call_status: 'in-progress',
+      customerData: cd,
+      speech: { language_code: 'es-AR', is_final: true, alternatives: [{ confidence: 0, transcript: '' }] },
+      reason: 'timeout',
+    };
+    const r = await postProxy('app', body);
+    handleAppResponse('🔇 silencio', body, r);
+  } catch (e) { flash('❌ ' + e.message, 'error'); }
+}
+
+function handleAppResponse(label, requestBody, r) {
+  logRequest('app', label, requestBody, {
+    upstreamStatus: r.upstreamStatus,
+    elapsedMs: r.elapsedMs,
+    upstreamBody: tryParse(r.upstreamBody),
+  }, r.elapsed);
+
+  // Intentar extraer los verbs para mostrar el "say" en el chat
+  const verbs = tryParse(r.upstreamBody);
+  if (Array.isArray(verbs)) {
+    let said = null;
+    let isTerminal = false;
+    for (const v of verbs) {
+      if (v.verb === 'say' && v.text) { said = v.text; isTerminal = true; }
+      if (v.verb === 'gather' && v.say && v.say.text) { said = v.say.text; }
+      if (v.verb === 'hangup') isTerminal = true;
+    }
+    if (said) addChatMessage('assistant', said);
+    if (isTerminal) setCallState('ended', 'terminó');
+  }
+}
+
+function tryParse(s) {
+  if (typeof s !== 'string') return s;
+  try { return JSON.parse(s); } catch (e) { return s; }
+}
+
+// ============================================================================
+// WEBHOOK STATUS
+// ============================================================================
+async function sendStatus(call_status, sip_status, sip_reason, isTerminal) {
+  try {
+    const cd = getCustomerData();
+    const sid = getCallSid();
+    const body = {
+      call_sid: sid,
+      direction: 'outbound',
+      from: document.getElementById('from-phone').value,
+      to: document.getElementById('to-phone').value,
+      sip_status,
+      sip_reason,
+      call_status,
+      account_sid: 'tester-account',
+      application_sid: 'tester-app',
+      trace_id: 'tester-trace',
+      customerData: cd,
+    };
+    if (isTerminal) {
+      body.call_termination_by = 'jambonz';
+      body.duration = parseInt(prompt('Duración (segundos)?', '15')) || 15;
+    }
+    const r = await postProxy('status', body);
+    logRequest('status', `📡 ${call_status}`, body, {
+      upstreamStatus: r.upstreamStatus,
+      upstreamBody: tryParse(r.upstreamBody),
+    }, r.elapsed);
+    if (call_status === 'in-progress') setCallState('active', 'en curso');
+    if (isTerminal) setCallState('ended', call_status);
+  } catch (e) { flash('❌ ' + e.message, 'error'); }
+}
+
+// ============================================================================
+// WEBHOOK AMD
+// ============================================================================
+async function sendAmd(type, reason) {
+  try {
+    const cd = getCustomerData();
+    const sid = getCallSid();
+    const body = {
+      call_sid: sid,
+      direction: 'outbound',
+      from: document.getElementById('from-phone').value,
+      to: document.getElementById('to-phone').value,
+      sip_status: 200,
+      sip_reason: 'OK',
+      call_status: 'in-progress',
+      customerData: cd,
+      type,
+      reason,
+      greeting: '',
+    };
+    const r = await postProxy('amd', body);
+    logRequest('amd', `🎯 ${type}`, body, {
+      upstreamStatus: r.upstreamStatus,
+      upstreamBody: tryParse(r.upstreamBody),
+    }, r.elapsed);
+    if (type === 'amd_machine_detected') setCallState('ended', 'contestador');
+  } catch (e) { flash('❌ ' + e.message, 'error'); }
+}
+
+init();
+</script>
+
+</body>
+</html>
